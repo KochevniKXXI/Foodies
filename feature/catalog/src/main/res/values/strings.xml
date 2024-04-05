@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="filter_button_description">Кнопка фильтра</string>
+    <string name="search_button_description">Кнопка поиска</string>
+</resources>

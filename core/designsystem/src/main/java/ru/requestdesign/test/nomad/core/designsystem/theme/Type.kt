@@ -1,4 +1,4 @@
-package ru.requestdesign.test.nomad.foodies.ui.theme
+package ru.requestdesign.test.nomad.core.designsystem.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

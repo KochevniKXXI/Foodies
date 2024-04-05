@@ -12,6 +12,9 @@ java {
 dependencies {
     api(project(":core:model"))
     implementation(project(":core:network"))
+    implementation(project(":core:runtime"))
+
+    implementation(libs.kotlinx.coroutines.core)
 
     // DI Hilt for Kotlin library
     implementation(libs.hilt.core)

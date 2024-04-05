@@ -1,4 +1,4 @@
-package ru.requestdesign.test.nomad.foodies.ui.theme
+package ru.requestdesign.test.nomad.core.designsystem.theme
 
 import android.app.Activity
 import android.os.Build
@@ -22,9 +22,15 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
+    primary = Carrot,
     secondary = PurpleGrey40,
-    tertiary = Pink40
+    tertiary = Pink40,
+    background = White,
+    surface = White,
+    surfaceVariant = Gray100,
+    onSurface = BlackAlpha87,
+    onSurfaceVariant = BlackAlpha60,
+    surfaceTint = White
 
     /* Other default colors to override
     background = Color(0xFFFFFBFE),
@@ -41,7 +47,7 @@ private val LightColorScheme = lightColorScheme(
 fun FoodiesTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="button_minus_description">Кнопка минус</string>
+    <string name="button_plus_description">Кнопка плюс</string>
+</resources>

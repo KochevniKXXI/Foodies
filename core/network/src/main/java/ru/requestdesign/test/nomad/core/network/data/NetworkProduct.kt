@@ -10,6 +10,7 @@ data class NetworkProduct(
     val categoryId: Int,
     val name: String,
     val description: String,
+    val image: String,
     @SerialName("price_current")
     val priceCurrent: Int,
     @SerialName("price_old")

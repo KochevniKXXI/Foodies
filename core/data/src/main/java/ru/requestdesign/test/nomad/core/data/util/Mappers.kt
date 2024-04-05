@@ -12,6 +12,7 @@ fun NetworkProduct.asInternalModel() = Product(
     categoryId = categoryId,
     name = name,
     description = description,
+    image = image,
     priceCurrent = priceCurrent,
     priceOld = priceOld,
     measure = measure,
