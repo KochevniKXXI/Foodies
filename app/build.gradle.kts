@@ -50,21 +50,24 @@ android {
 }
 
 dependencies {
+    // Modules
     implementation(project(":core:data"))
     implementation(project(":core:designsystem"))
+    implementation(project(":core:network"))
+    implementation(project(":core:runtime"))
+    implementation(project(":feature:cart"))
     implementation(project(":feature:catalog"))
+    implementation(project(":feature:product"))
 
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
+    // Compose BOM
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.material3.windowSizeClass)
+
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+
+    // DI with hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
-
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
 }

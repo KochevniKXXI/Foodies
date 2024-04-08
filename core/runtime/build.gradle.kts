@@ -10,8 +10,10 @@ java {
 }
 
 dependencies {
+    // Modules
     implementation(project(":core:model"))
 
+    // Coroutines
     implementation(libs.kotlinx.coroutines.core)
 
     // DI Hilt for Kotlin library

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="empty_screen_message">Выбранный продукт не найден</string>
+    <string name="button_in_cart_text">В корзину за %1$s</string>
+</resources>

@@ -3,15 +3,15 @@
 package ru.requestdesign.test.nomad.feature.catalog
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -30,37 +29,87 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ru.requestdesign.test.nomad.core.designsystem.components.BottomBarButton
 import ru.requestdesign.test.nomad.core.designsystem.components.Counter
-import ru.requestdesign.test.nomad.core.designsystem.theme.FoodiesTheme
+import ru.requestdesign.test.nomad.core.designsystem.components.EmptyScreen
+import ru.requestdesign.test.nomad.core.designsystem.components.ErrorScreen
+import ru.requestdesign.test.nomad.core.designsystem.components.LoadingScreen
+import ru.requestdesign.test.nomad.core.designsystem.utils.formatAsPriceString
 import ru.requestdesign.test.nomad.core.model.Category
 import ru.requestdesign.test.nomad.core.model.Product
-import java.math.RoundingMode
-import java.text.NumberFormat
+import ru.requestdesign.test.nomad.core.designsystem.R as designsystemR
 
 @Composable
-fun CatalogScreen(
+internal fun CatalogRoute(
+    columns: GridCells,
+    onProductClick: (Int) -> Unit,
+    onCartClick: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: CatalogViewModel = viewModel()
+    viewModel: CatalogViewModel = hiltViewModel()
 ) {
-    val catalogUiState by viewModel.catalogUiState.collectAsState()
-    val categoriesUiState by viewModel.categoriesUiState.collectAsState()
+    val catalogUiState by viewModel.catalogUiState.collectAsStateWithLifecycle()
+    val categoriesUiState by viewModel.categoriesUiState.collectAsStateWithLifecycle()
+    val currentCategory = viewModel.currentCategory.value
+    CatalogScreen(
+        catalogUiState = catalogUiState,
+        categoriesUiState = categoriesUiState,
+        currentCategory = currentCategory,
+        columns = columns,
+        onAddProductClick = viewModel::addProductInCart,
+        onRemoveProductClick = viewModel::removeProductFromCart,
+        onCategoryClick = viewModel::updateCurrentCategory,
+        onFilterClick = { /*TODO*/ },
+        onSearchClick = { /*TODO*/ },
+        onProductClick = onProductClick,
+        onCartClick = onCartClick,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun CatalogScreen(
+    catalogUiState: CatalogUiState,
+    categoriesUiState: CategoriesUiState,
+    currentCategory: Category?,
+    columns: GridCells,
+    onAddProductClick: (Product) -> Unit,
+    onRemoveProductClick: (Product) -> Unit,
+    onCategoryClick: (Category) -> Unit,
+    onFilterClick: () -> Unit,
+    onSearchClick: () -> Unit,
+    onProductClick: (Int) -> Unit,
+    onCartClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(
         topBar = {
-            CatalogTopAppBar()
+            CatalogTopAppBar(
+                onFilterClick = onFilterClick,
+                onSearchClick = onSearchClick,
+            )
         },
         bottomBar = {
-
+            CartButton(
+                uiState = catalogUiState,
+                onClick = onCartClick,
+                modifier = Modifier
+                    .padding(
+                        horizontal = dimensionResource(id = designsystemR.dimen.bottom_app_bar_margin_horizontal),
+                        vertical = dimensionResource(id = designsystemR.dimen.bottom_app_bar_margin_vertical)
+                    )
+            )
         },
         modifier = modifier
     ) { innerPadding ->
@@ -69,16 +118,21 @@ fun CatalogScreen(
         ) {
             CategoriesChips(
                 uiState = categoriesUiState,
+                currentCategory = currentCategory,
+                onCategoryClick = onCategoryClick,
                 modifier = Modifier
-                    .padding(top = 8.dp)
+                    .padding(top = dimensionResource(id = R.dimen.categories_chips_padding_top))
             )
             Catalog(
                 uiState = catalogUiState,
-                onAddClick = { viewModel.addProductInCart(it) },
-                onRemoveClick = { viewModel.removeProductFromCart(it) },
+                currentCategory = currentCategory,
+                columns = columns,
+                onCardClick = onProductClick,
+                onAddClick = onAddProductClick,
+                onRemoveClick = onRemoveProductClick,
                 modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .padding(top = 16.dp)
+                    .padding(horizontal = dimensionResource(id = R.dimen.catalog_padding_horizontal))
+                    .padding(top = dimensionResource(id = R.dimen.catalog_padding_top))
             )
         }
     }
@@ -86,59 +140,99 @@ fun CatalogScreen(
 
 @Composable
 private fun CatalogTopAppBar(
+    onFilterClick: () -> Unit,
+    onSearchClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     CenterAlignedTopAppBar(
         title = {
             Image(
-                painter = painterResource(id = R.drawable.logo),
+                painter = painterResource(id = designsystemR.drawable.logo),
                 contentDescription = null
             )
         },
         navigationIcon = {
             IconButton(
-                onClick = { /*TODO*/ }
+                onClick = onFilterClick
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.filter),
-                    contentDescription = stringResource(R.string.filter_button_description)
+                    painter = painterResource(id = designsystemR.drawable.ic_filter),
+                    contentDescription = stringResource(designsystemR.string.filter_button_description)
                 )
             }
         },
         actions = {
             IconButton(
-                onClick = { /*TODO*/ }
+                onClick = onSearchClick
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.search),
-                    contentDescription = stringResource(R.string.search_button_description)
+                    painter = painterResource(id = designsystemR.drawable.ic_search),
+                    contentDescription = stringResource(designsystemR.string.search_button_description)
                 )
             }
         },
+        colors = TopAppBarDefaults.topAppBarColors(
+            navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+            actionIconContentColor = MaterialTheme.colorScheme.onSurface
+        ),
         modifier = modifier
     )
 }
 
 @Composable
+private fun CartButton(
+    uiState: CatalogUiState,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (uiState is CatalogUiState.Success) {
+        val sumCart = uiState.cart.map { it.key.priceCurrent * it.value }.sum()
+        if (sumCart > 0) {
+            BottomBarButton(
+                onClick = onClick,
+                modifier = modifier
+            ) {
+                Icon(
+                    painter = painterResource(id = designsystemR.drawable.ic_cart),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(end = dimensionResource(id = R.dimen.icon_cart_on_button_padding_end))
+                        .size(dimensionResource(id = R.dimen.icon_cart_on_button_size))
+                )
+                Text(text = sumCart.formatAsPriceString())
+            }
+        }
+    }
+}
+
+@Composable
 private fun CategoriesChips(
-    uiState: UiState<List<Category>>,
+    uiState: CategoriesUiState,
+    currentCategory: Category?,
+    onCategoryClick: (Category) -> Unit,
     modifier: Modifier = Modifier
 ) {
     when (uiState) {
-        UiState.Loading -> {}
-        UiState.Error -> {}
-        UiState.Empty -> {}
-        is UiState.Success -> {
-            val categoriesList = uiState.data
+        CategoriesUiState.Loading -> { /*TODO*/
+        }
+
+        CategoriesUiState.Error -> { /*TODO*/
+        }
+
+        CategoriesUiState.Empty -> { /*TODO*/
+        }
+
+        is CategoriesUiState.Success -> {
+            val categoriesList = uiState.categories
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.space_between_chips)),
                 modifier = modifier
             ) {
                 itemsIndexed(categoriesList) { index, category ->
                     // FIXME: Убрать обводку
                     FilterChip(
-                        selected = index == 0,
-                        onClick = { /*TODO*/ },
+                        selected = category == currentCategory,
+                        onClick = { onCategoryClick(category) },
                         label = {
                             Text(
                                 text = category.name,
@@ -150,9 +244,23 @@ private fun CategoriesChips(
                             selectedContainerColor = MaterialTheme.colorScheme.primary,
                             selectedLabelColor = MaterialTheme.colorScheme.surface
                         ),
+                        border = FilterChipDefaults.filterChipBorder(
+                            enabled = false,
+                            selected = false,
+                            borderColor = Color.Transparent,
+                            borderWidth = dimensionResource(id = designsystemR.dimen.zero)
+                        ),
+                        elevation = FilterChipDefaults.filterChipElevation(
+                            elevation = dimensionResource(
+                                id = designsystemR.dimen.zero
+                            )
+                        ),
                         modifier = Modifier
-                            .height(40.dp)
-                            .padding(start = if (index == 0) 16.dp else 0.dp)
+                            .height(dimensionResource(id = R.dimen.chip_height))
+                            .padding(
+                                start = if (index == 0) dimensionResource(id = R.dimen.start_chip_padding_start)
+                                else dimensionResource(id = designsystemR.dimen.zero)
+                            )
                     )
                 }
             }
@@ -163,38 +271,47 @@ private fun CategoriesChips(
 
 @Composable
 private fun Catalog(
-    uiState: UiState<Map<Product, Int>>,
+    uiState: CatalogUiState,
+    currentCategory: Category?,
+    columns: GridCells,
+    onCardClick: (Int) -> Unit,
     onAddClick: (Product) -> Unit,
     onRemoveClick: (Product) -> Unit,
     modifier: Modifier = Modifier
 ) {
     when (uiState) {
-        UiState.Loading -> {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                CircularProgressIndicator()
-            }
+        CatalogUiState.Loading -> {
+            LoadingScreen()
         }
-        UiState.Error -> {}
-        UiState.Empty -> {}
-        is UiState.Success -> {
-            val productsMap = uiState.data
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = modifier
-            ) {
-                items(productsMap.keys.toList()) { product ->
-                    ProductCard(
-                        product = product,
-                        quantityInCart = productsMap.getOrDefault(product, 0),
-                        onAddClick = onAddClick,
-                        onRemoveClick = onRemoveClick
-                    )
+
+        is CatalogUiState.Error -> { ErrorScreen(message = uiState.error.message ?: "") }
+        CatalogUiState.Empty -> {
+            EmptyScreen(message = stringResource(R.string.empty_screen_message))
+        }
+
+        is CatalogUiState.Success -> {
+            val productsMap = currentCategory?.let { category ->
+                uiState.cart.filterKeys { it.categoryId == category.id }
+            } ?: uiState.cart
+            if (productsMap.isNotEmpty()) {
+                LazyVerticalGrid(
+                    columns = columns,
+                    verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.space_between_grid_items)),
+                    horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.space_between_grid_items)),
+                    modifier = modifier
+                ) {
+                    items(productsMap.keys.toList()) { product ->
+                        ProductCard(
+                            product = product,
+                            quantityInCart = productsMap.getOrDefault(product, 0),
+                            onClick = onCardClick,
+                            onAddClick = onAddClick,
+                            onRemoveClick = onRemoveClick
+                        )
+                    }
                 }
+            } else {
+                EmptyScreen(message = stringResource(R.string.empty_filters_screen_message))
             }
         }
     }
@@ -204,28 +321,49 @@ private fun Catalog(
 private fun ProductCard(
     product: Product,
     quantityInCart: Int,
+    onClick: (Int) -> Unit,
     onAddClick: (Product) -> Unit,
     onRemoveClick: (Product) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // FIXME: Вписать картинку
     Card(
         shape = MaterialTheme.shapes.small,
         modifier = modifier
+            .clickable { onClick(product.id) }
     ) {
         Box {
             Image(
-                painter = painterResource(id = R.drawable.food),
+                painter = painterResource(id = designsystemR.drawable.tom_yum),
                 contentDescription = null,
                 modifier = Modifier
-                    .padding(bottom = 12.dp)
+                    .padding(bottom = dimensionResource(id = R.dimen.image_padding_bottom))
             )
-            product.priceOld?.let {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_discount),
-                    contentDescription = null,
-                    modifier = Modifier.padding(start = 8.dp, top = 8.dp)
-                )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.space_between_tag_items)),
+                modifier = Modifier
+                    .padding(
+                        start = dimensionResource(id = R.dimen.tags_row_padding),
+                        top = dimensionResource(id = R.dimen.tags_row_padding)
+                    )
+            ) {
+                product.priceOld?.let {
+                    Image(
+                        painter = painterResource(id = designsystemR.drawable.ic_discount),
+                        contentDescription = null
+                    )
+                }
+                if (product.tagIds.contains(2)) {
+                    Image(
+                        painter = painterResource(id = designsystemR.drawable.ic_without_meat),
+                        contentDescription = null
+                    )
+                }
+                if (product.tagIds.contains(4)) {
+                    Image(
+                        painter = painterResource(id = designsystemR.drawable.ic_spicy),
+                        contentDescription = null
+                    )
+                }
             }
         }
         Text(
@@ -234,42 +372,45 @@ private fun ProductCard(
             maxLines = 1,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier
-                .padding(horizontal = 12.dp)
-                .padding(bottom = 4.dp)
+                .padding(horizontal = dimensionResource(id = R.dimen.product_name_padding_horizontal))
+                .padding(bottom = dimensionResource(id = R.dimen.product_name_padding_bottom))
         )
         Text(
             text = "${product.measure} ${product.measureUnit}",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(horizontal = 12.dp)
+            modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.product_name_padding_horizontal))
         )
         if (quantityInCart == 0) {
             ElevatedButton(
-                onClick = { onAddClick(product) },
+                onClick = {
+                    onAddClick(product)
+                },
                 shape = MaterialTheme.shapes.small,
                 colors = ButtonDefaults.elevatedButtonColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     contentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 elevation = ButtonDefaults.elevatedButtonElevation(
-                    defaultElevation = 4.dp
+                    defaultElevation = dimensionResource(id = R.dimen.elevation_price_button)
                 ),
                 modifier = Modifier
-                    .padding(12.dp)
+                    .padding(dimensionResource(id = R.dimen.padding_price_button))
                     .fillMaxWidth()
             ) {
                 Text(
-                    text = product.priceCurrent.formatAsPrice(),
+                    text = product.priceCurrent.formatAsPriceString(),
                     color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleMedium
                 )
-                Spacer(modifier = Modifier.width(8.dp))
                 product.priceOld?.let { priceOld ->
                     Text(
-                        text = priceOld.formatAsPrice(),
+                        text = priceOld.formatAsPriceString(),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textDecoration = TextDecoration.LineThrough,
-                        style = MaterialTheme.typography.bodyMedium
+                        maxLines = 1,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(start = dimensionResource(id = R.dimen.price_old_padding))
                     )
                 }
             }
@@ -278,7 +419,9 @@ private fun ProductCard(
                 amount = quantityInCart,
                 onMinusClick = { onRemoveClick(product) },
                 onPlusClick = { onAddClick(product) },
-                modifier = Modifier.padding(12.dp)
+                modifier = Modifier
+                    .padding(dimensionResource(id = R.dimen.counter_padding))
+                    .fillMaxWidth()
             )
         }
     }
@@ -286,83 +429,47 @@ private fun ProductCard(
 
 @Preview
 @Composable
-private fun CatalogTopAppBarPreview() {
-    FoodiesTheme {
-        CatalogTopAppBar()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun CategoriesTabsPreview() {
-    FoodiesTheme {
-        CategoriesChips(
-            uiState = UiState.Success(
-                listOf(
-                    Category(name = "Роллы"),
-                    Category(name = "Суши"),
-                    Category(name = "Наборы"),
-                    Category(name = "Горячие блюда"),
-                    Category(name = "Супы"),
-                    Category(name = "Десерты"),
-                )
-            )
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun ProductCardPreview() {
-    FoodiesTheme {
-        ProductCard(
-            product = Product(
-                name = "Том Ям",
-                measure = 500,
-                measureUnit = "г",
-                priceCurrent = 72000
-            ),
-            quantityInCart = 0,
-            onAddClick = {},
-            onRemoveClick = {}
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun CatalogPreview() {
-    FoodiesTheme {
-        Catalog(
-            uiState = UiState.Success(
-                mapOf(
+private fun CatalogScreenPreview() {
+    CatalogScreen(
+        catalogUiState = CatalogUiState.Success(
+            mapOf(
+                Product(
+                    name = "Том Ям",
+                    categoryId = 1,
+                    priceCurrent = 72000,
+                    priceOld = 80000,
+                    measure = 500,
+                    measureUnit = "г"
+                ) to 2,
+                *List(5) {
                     Product(
-                        name = "Том Ям",
-                        priceCurrent = 72000,
-                        priceOld = 80000,
+                        name = "Название блюда $it",
+                        categoryId = 1,
+                        priceCurrent = 48000,
                         measure = 500,
                         measureUnit = "г"
-                    ) to 2,
-                    *List(5) {
-                        Product(
-                            name = "Название блюда $it",
-                            priceCurrent = 48000,
-                            measure = 500,
-                            measureUnit = "г"
-                        ) to 0
-                    }.toTypedArray()
-                )
-            ),
-            onAddClick = {},
-            onRemoveClick = {}
-        )
-    }
-}
-
-private fun Int.formatAsPrice(): String {
-    val formatter = NumberFormat.getCurrencyInstance().apply {
-        maximumFractionDigits = 0
-        roundingMode = RoundingMode.CEILING
-    }
-    return formatter.format(this / 100.00)
+                    ) to 0
+                }.toTypedArray()
+            )
+        ),
+        categoriesUiState = CategoriesUiState.Success(
+            listOf(
+                Category(id = 1, name = "Роллы"),
+                Category(name = "Суши"),
+                Category(name = "Наборы"),
+                Category(name = "Горячие блюда"),
+                Category(name = "Супы"),
+                Category(name = "Десерты"),
+            )
+        ),
+        currentCategory = Category(id = 1, name = "Роллы"),
+        columns = GridCells.Fixed(2),
+        onAddProductClick = {},
+        onRemoveProductClick = {},
+        onCategoryClick = {},
+        onFilterClick = {},
+        onSearchClick = {},
+        onProductClick = {},
+        onCartClick = {}
+    )
 }

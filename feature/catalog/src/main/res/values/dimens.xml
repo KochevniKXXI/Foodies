@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="categories_chips_padding_top">8dp</dimen>
+    <dimen name="catalog_padding_horizontal">16dp</dimen>
+    <dimen name="catalog_padding_top">16dp</dimen>
+    <dimen name="icon_cart_on_button_padding_end">8dp</dimen>
+    <dimen name="icon_cart_on_button_size">20dp</dimen>
+    <dimen name="space_between_chips">8dp</dimen>
+    <dimen name="chip_height">40dp</dimen>
+    <dimen name="start_chip_padding_start">16dp</dimen>
+    <dimen name="space_between_grid_items">8dp</dimen>
+    <dimen name="image_padding_bottom">12dp</dimen>
+    <dimen name="space_between_tag_items">8dp</dimen>
+    <dimen name="tags_row_padding">8dp</dimen>
+    <dimen name="product_name_padding_horizontal">12dp</dimen>
+    <dimen name="product_name_padding_bottom">4dp</dimen>
+    <dimen name="elevation_price_button">4dp</dimen>
+    <dimen name="padding_price_button">12dp</dimen>
+    <dimen name="price_old_padding">8dp</dimen>
+    <dimen name="counter_padding">12dp</dimen>
+</resources>

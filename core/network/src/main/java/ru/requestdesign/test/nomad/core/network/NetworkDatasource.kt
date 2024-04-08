@@ -5,10 +5,11 @@ import ru.requestdesign.test.nomad.core.network.data.NetworkProduct
 import ru.requestdesign.test.nomad.core.network.data.NetworkTag
 
 /**
- * Интерфейс, предоставляющий функции для получения данных с сервера приложения.
+ * Интерфейс, предоставляющий запросы к серверу приложения.
  */
-interface NetworkDataSource {
+interface NetworkDatasource {
     suspend fun getCategories(): List<NetworkCategory>
     suspend fun getTags(): List<NetworkTag>
     suspend fun getProducts(): List<NetworkProduct>
+    suspend fun getProductById(id: Int): NetworkProduct?
 }

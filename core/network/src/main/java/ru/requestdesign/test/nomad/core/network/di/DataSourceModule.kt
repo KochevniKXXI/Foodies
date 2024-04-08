@@ -4,7 +4,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import ru.requestdesign.test.nomad.core.network.NetworkDataSource
+import ru.requestdesign.test.nomad.core.network.NetworkDatasource
 import ru.requestdesign.test.nomad.core.network.retrofit.RetrofitWorkTestServer
 import javax.inject.Singleton
 
@@ -15,5 +15,5 @@ internal abstract class DataSourceModule {
     @Singleton
     abstract fun bindNetworkDataSource(
         retrofitWorkTestServer: RetrofitWorkTestServer
-    ): NetworkDataSource
+    ): NetworkDatasource
 }

@@ -1,14 +1,11 @@
 package ru.requestdesign.test.nomad.core.designsystem.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,38 +22,51 @@ fun Counter(
     amount: Int,
     onMinusClick: () -> Unit,
     onPlusClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    elevated: Boolean = true
 ) {
+    val containerColor = if (elevated) {
+        MaterialTheme.colorScheme.surface
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant
+    }
+
+    val elevation = if (elevated) {
+        FloatingActionButtonDefaults.elevation()
+    } else {
+        FloatingActionButtonDefaults.loweredElevation(defaultElevation = 0.dp)
+    }
+
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
     ) {
-        ElevatedButton(
+        SmallFloatingActionButton(
             onClick = onMinusClick,
             shape = MaterialTheme.shapes.small,
-            elevation = ButtonDefaults.elevatedButtonElevation(
-                defaultElevation = 4.dp
-            ),
-            contentPadding = PaddingValues(0.dp),
-            modifier = Modifier.size(40.dp)
+            containerColor = containerColor,
+            contentColor = MaterialTheme.colorScheme.primary,
+            elevation = elevation
         ) {
-            Image(
+            Icon(
                 painter = painterResource(id = R.drawable.ic_minus),
                 contentDescription = stringResource(R.string.button_minus_description)
             )
         }
-        Text(text = "$amount")
-        ElevatedButton(
+        Text(
+            text = "$amount",
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleMedium
+        )
+        SmallFloatingActionButton(
             onClick = onPlusClick,
             shape = MaterialTheme.shapes.small,
-            elevation = ButtonDefaults.elevatedButtonElevation(
-                defaultElevation = 4.dp
-            ),
-            contentPadding = PaddingValues(0.dp),
-            modifier = Modifier.size(40.dp)
+            containerColor = containerColor,
+            contentColor = MaterialTheme.colorScheme.primary,
+            elevation = elevation
         ) {
-            Image(
+            Icon(
                 painter = painterResource(id = R.drawable.ic_plus),
                 contentDescription = stringResource(R.string.button_plus_description)
             )
@@ -71,7 +81,8 @@ private fun CounterPreview() {
         Counter(
             amount = 1,
             onMinusClick = {},
-            onPlusClick = {}
+            onPlusClick = {},
+            elevated = false
         )
     }
 }

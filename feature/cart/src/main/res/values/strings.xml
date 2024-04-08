@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="top_app_bar_title">Корзина</string>
+    <string name="empty_screen_message">Пусто, выберите блюда в каталоге :)</string>
+    <string name="button_order_text">Заказать за %1$s</string>
+</resources>

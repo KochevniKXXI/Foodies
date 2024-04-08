@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="filter_button_description">Кнопка фильтра</string>
-    <string name="search_button_description">Кнопка поиска</string>
+    <string name="empty_screen_message">Каталог пуст</string>
+    <string name="empty_filters_screen_message">Таких блюд нет :(\nПопробуйте изменить фильтры</string>
 </resources>

@@ -1,5 +1,6 @@
 package ru.requestdesign.test.nomad.feature.catalog
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,71 +21,67 @@ class CatalogViewModel @Inject constructor(
     private val productsRepository: ProductsRepository,
     private val categoriesRepository: CategoriesRepository
 ) : ViewModel() {
+    private val _currentCategory = mutableStateOf<Category?>(null)
+    val currentCategory = _currentCategory
+
+    private val _categoriesUiState: MutableStateFlow<CategoriesUiState> =
+        MutableStateFlow(CategoriesUiState.Loading)
+    val categoriesUiState = _categoriesUiState.asStateFlow()
+
     val catalogUiState = productsRepository.getProducts().map { result ->
         result.fold(
-            onSuccess = { productsList ->
-                if (productsList.isNotEmpty()) {
-                    UiState.Success(productsList)
+            onSuccess = { cart ->
+                if (cart.isNotEmpty()) {
+                    CatalogUiState.Success(cart)
                 } else {
-                    UiState.Empty
+                    CatalogUiState.Empty
                 }
             },
-            onFailure = { UiState.Error }
+            onFailure = { CatalogUiState.Error(it) }
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = UiState.Loading
+        initialValue = CatalogUiState.Loading
     )
 
-    //    private val _catalogUiState: MutableStateFlow<UiState<List<Product>>> = MutableStateFlow(UiState.Loading)
-//    val catalogUiState = _catalogUiState.asStateFlow()
-    private val _categoriesUiState: MutableStateFlow<UiState<List<Category>>> =
-        MutableStateFlow(UiState.Loading)
-    val categoriesUiState = _categoriesUiState.asStateFlow()
-
     init {
-//        getProducts()
         getCategories()
     }
 
-//    private fun getProducts() {
-//        viewModelScope.launch {
-//            runCatching {
-//                productsRepository.getProducts()
-//            }.onSuccess { productsList ->
-//                _catalogUiState.value = if (productsList.isEmpty()) {
-//                    UiState.Empty
-//                } else {
-//                    UiState.Success(productsList)
-//                }
-//            }.onFailure {
-//                _catalogUiState.value = UiState.Error
-//            }
-//        }
-//    }
+    fun updateCurrentCategory(category: Category) {
+        if (_currentCategory.value == category) {
+            _currentCategory.value = null
+        } else {
+            _currentCategory.value = category
+        }
+    }
 
     fun addProductInCart(product: Product) {
-        productsRepository.addProductInCart(product)
+        viewModelScope.launch {
+            productsRepository.addProductInCart(product)
+        }
     }
 
     fun removeProductFromCart(product: Product) {
-        productsRepository.removeProductFromCart(product)
+        viewModelScope.launch {
+            productsRepository.removeProductFromCart(product)
+        }
     }
 
     private fun getCategories() {
         viewModelScope.launch {
-            runCatching {
-                categoriesRepository.getCategories()
-            }.onSuccess { categoriesList ->
-                _categoriesUiState.value = if (categoriesList.isEmpty()) {
-                    UiState.Empty
-                } else {
-                    UiState.Success(categoriesList)
+            categoriesRepository.getCategories()
+                .onSuccess { categoriesList ->
+                    _categoriesUiState.value = if (categoriesList.isEmpty()) {
+                        CategoriesUiState.Empty
+                    } else {
+                        CategoriesUiState.Success(categoriesList)
+                    }
                 }
-            }.onFailure {
-                _categoriesUiState.value = UiState.Error
-            }
+                .onFailure {
+                    _categoriesUiState.value = CategoriesUiState.Error
+                }
         }
     }
 }

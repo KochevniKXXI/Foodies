@@ -5,6 +5,9 @@ import ru.requestdesign.test.nomad.core.network.data.NetworkCategory
 import ru.requestdesign.test.nomad.core.network.data.NetworkProduct
 import ru.requestdesign.test.nomad.core.network.data.NetworkTag
 
+/**
+ * API-сервис, взаимодействующий с сервером.
+ */
 internal interface WorkTestService {
     @GET("Categories.json")
     suspend fun getCategories(): List<NetworkCategory>

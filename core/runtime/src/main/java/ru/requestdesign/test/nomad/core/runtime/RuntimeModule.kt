@@ -8,7 +8,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface RuntimeModule {
+internal interface RuntimeModule {
     @Binds
     @Singleton
     fun bindRuntimeDataSource(

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="space_after_counter">16dp</dimen>
+    <dimen name="footer_bottom_padding">16dp</dimen>
+    <dimen name="price_column_width">80dp</dimen>
+    <dimen name="price_column_height">44dp</dimen>
+    <dimen name="leading_image_padding_vertical">8dp</dimen>
+    <dimen name="leading_image_size">96dp</dimen>
+    <dimen name="list_item_height">130dp</dimen>
+</resources>

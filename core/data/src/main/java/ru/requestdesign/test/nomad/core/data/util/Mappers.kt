@@ -7,6 +7,10 @@ import ru.requestdesign.test.nomad.core.network.data.NetworkCategory
 import ru.requestdesign.test.nomad.core.network.data.NetworkProduct
 import ru.requestdesign.test.nomad.core.network.data.NetworkTag
 
+/*
+ * Здесь находяться преобразователи данных в модель приложения
+ */
+
 fun NetworkProduct.asInternalModel() = Product(
     id = id,
     categoryId = categoryId,

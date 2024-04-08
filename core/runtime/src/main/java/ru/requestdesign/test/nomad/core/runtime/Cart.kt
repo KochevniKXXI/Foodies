@@ -1,38 +1,34 @@
 package ru.requestdesign.test.nomad.core.runtime
 
-import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
 import ru.requestdesign.test.nomad.core.model.Product
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Реализация корзины товаров, существующей только во время выполнения.
+ */
 @Singleton
-class Cart @Inject constructor() : RuntimeDataSource {
+internal class Cart @Inject constructor() : RuntimeDataSource {
     private val productsMap = mutableMapOf<Product, Int>()
-    private var mListener: OnChangeListener? = null
+    private val cartFlow = MutableSharedFlow<Map<Product, Int>>()
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
-    override val cartFlow = callbackFlow {
-        val listener = object : OnChangeListener {
-            override fun onChange(cart: Map<Product, Int>) {
-                trySend(cart)
-            }
-        }
-        mListener = listener
-        awaitClose { mListener = null }
-    }.onStart { emit(productsMap) }
-
-    override fun getSum(): Flow<Int> = flowOf(
-        productsMap.map { it.key.priceCurrent * it.value }.sum()
-    )
+    override val cart: Flow<Map<Product, Int>> = cartFlow.onStart { emit(productsMap.toMap()) }
 
     override fun addProduct(product: Product) {
         productsMap.merge(product, 1) { oldValue, _ ->
             oldValue + 1
         }
-        mListener?.onChange(productsMap)
+        coroutineScope.launch {
+            cartFlow.emit(productsMap.toMap())
+        }
     }
 
     override fun removeProduct(product: Product) {
@@ -43,10 +39,12 @@ class Cart @Inject constructor() : RuntimeDataSource {
                 oldValue - 1
             }
         }
-        mListener?.onChange(productsMap)
+        coroutineScope.launch {
+            cartFlow.emit(productsMap.toMap())
+        }
     }
-}
 
-interface OnChangeListener {
-    fun onChange(cart: Map<Product, Int>)
+    override fun getQuantityProductById(id: Int): Flow<Int> = cart.map { cart ->
+        cart.mapKeys { it.key.id }.getOrDefault(id, 0)
+    }
 }
